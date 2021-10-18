@@ -36,7 +36,7 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
     public Portal currentPortal;
     public boolean[] deadPortals = new boolean[4];
 
-    private Random random = new Random();
+    private final Random random = new Random();
 
     private final WorldPoint dockTile = new WorldPoint(2657, 2639, 0);
     private final WorldPoint boatTile = new WorldPoint(2661, 2639, 0);
