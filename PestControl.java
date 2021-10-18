@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * @Discord Reminisce#1707
  */
 @ScriptManifest(author = "Reminisce", category = Category.MINIGAMES,
-        description = "Mindlessly does pest control", name = "SPest control", version = "1.0", discord = "Reminisce#1707", servers = { "Xeros" })
+        description = "Mindlessly does pest control", name = "SPest control", version = "1.0", discord = "Reminisce#1707", servers = {"Xeros"})
 public class PestControl extends Script implements SimplePaintable, SimpleMessageListener {
 
     private String status;
@@ -82,11 +82,13 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
             processPortalDeaths();
             if (ctx.pathing.distanceTo(currentPortal.walkTile) <= 10) {
                 if (!ctx.npcs.populate().filter(currentPortal.npcId).isEmpty()) {
-                    SimpleNpc portal = ctx.npcs.nearest().next();
-                    if (portal != null) {
-                        status = "Attacking portal";
-                        portal.interact("Attack");
-                        ctx.onCondition(() -> ctx.players.getLocal().getInteracting() != null, 250, 10);
+                    if (ctx.players.getLocal().getInteracting() == null) {
+                        SimpleNpc portal = ctx.npcs.nearest().next();
+                        if (portal != null) {
+                            status = "Attacking portal";
+                            portal.interact("Attack");
+                            ctx.onCondition(() -> ctx.players.getLocal().getInteracting() != null, 250, 10);
+                        }
                     }
                 }
             } else {
@@ -105,7 +107,7 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
     }
 
     private void processPortalDeaths() {
-        for (int i = 0; i < 4; i ++) {
+        for (int i = 0; i < 4; i++) {
             Portal portal = Portal.values()[i];
             if (ctx.pathing.distanceTo(portal.walkTile) <= 14) {
                 if (ctx.npcs.populate().filter(portal.npcId).isEmpty()) {
@@ -117,7 +119,7 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
         }
         if (deadPortals[currentPortal.ordinal()]) {
             int closest = -1;
-            for (int i = 0; i < 4; i ++) {
+            for (int i = 0; i < 4; i++) {
                 if (!deadPortals[i]) {
                     if (closest == -1 || ctx.pathing.distanceTo(Portal.values()[i].walkTile) < ctx.pathing.distanceTo(Portal.values()[closest].walkTile)) {
                         closest = i;
