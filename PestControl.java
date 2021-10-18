@@ -11,9 +11,9 @@ import simple.api.script.ScriptManifest;
 import simple.api.script.interfaces.SimplePaintable;
 import simple.api.wrappers.SimpleGameObject;
 import simple.api.wrappers.SimpleNpc;
-import simple.utils.Random;
 
 import java.awt.*;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +35,8 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
     public boolean islandStarted;
     public Portal currentPortal;
     public boolean[] deadPortals = new boolean[4];
+
+    private Random random = new Random();
 
     private final WorldPoint dockTile = new WorldPoint(2657, 2639, 0);
     private final WorldPoint boatTile = new WorldPoint(2661, 2639, 0);
@@ -99,7 +101,7 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
     private void initIsland() {
         islandStarted = true;
         deadPortals = new boolean[4];
-        currentPortal = Portal.values()[Random.between(0, 3)];
+        currentPortal = Portal.values()[between(0, 3)];
     }
 
     private void processPortalDeaths() {
@@ -123,6 +125,14 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
                 }
             }
             currentPortal = Portal.values()[closest];
+        }
+    }
+
+    private int between(final int min, final int max) {
+        try {
+            return min + (max == min ? 0 : random.nextInt(max - min));
+        } catch (Exception e) {
+            return min + (max - min);
         }
     }
 
