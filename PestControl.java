@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * @Discord Reminisce#1707
  */
 @ScriptManifest(author = "Reminisce", category = Category.MINIGAMES,
-        description = "Mindlessly does pest control", name = "SPest control", version = "1.2", discord = "Reminisce#1707", servers = {"Xeros"})
+        description = "Mindlessly does pest control", name = "SPest control", version = "1.3", discord = "Reminisce#1707", servers = {"Xeros"})
 public class PestControl extends Script implements SimplePaintable, SimpleMessageListener {
 
     private String status;
@@ -68,7 +68,9 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
                     if (gangplank != null) {
                         status = "Crossing plank";
                         gangplank.interact(SimpleObjectActions.FIRST);
-                        ctx.onCondition(() -> ctx.pathing.reachable(boatTile), 250, 10);
+                        if (ctx.onCondition(() -> ctx.pathing.reachable(boatTile), 250, 10)) {
+                            ctx.pathing.step(ctx.players.getLocal().getLocation().derrive(between(-1, 3), between(-1, 4)));
+                        }
                     }
                 }
             }
@@ -97,6 +99,7 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
                 ctx.pathing.step(currentPortal.walkTile);
             }
         } else {
+            status = "Lost: Not at Pest Control";
             ctx.log("We aren't inside of pest control");
         }
     }
@@ -158,7 +161,7 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
         g.drawLine(8, 24, 194, 24);
 
         g.setColor(Color.decode("#e0ad01"));
-        g.drawString("RPest Control                            v. " + "0.2", 12, 20);
+        g.drawString("RPest Control                           v. " + "1.3", 12, 20);
         g.drawString("Time: " + ctx.paint.formatTime(System.currentTimeMillis() - startTime), 14, 42);
         g.drawString("Status: " + status, 14, 56);
 
