@@ -1,5 +1,6 @@
 package me.remie.xeros.pestcontrol;
 
+import simple.api.ClientContext;
 import simple.api.actions.SimpleObjectActions;
 import simple.api.coords.WorldArea;
 import simple.api.coords.WorldPoint;
@@ -24,18 +25,14 @@ import java.util.regex.Pattern;
  * @Discord Reminisce#1707
  */
 @ScriptManifest(author = "Reminisce", category = Category.MINIGAMES,
-        description = "Mindlessly does pest control", name = "SPest control", version = "1.0", discord = "Reminisce#1707", servers = {"Xeros"})
+        description = "Mindlessly does pest control", name = "SPest control", version = "1.2", discord = "Reminisce#1707", servers = {"Xeros"})
 public class PestControl extends Script implements SimplePaintable, SimpleMessageListener {
 
     private String status;
     private long startTime;
-
     private int gainedPoints;
-
-    public boolean islandStarted;
     public Portal currentPortal;
-    public boolean[] deadPortals = new boolean[4];
-
+    public boolean islandStarted;
     private final Random random = new Random();
 
     private final WorldPoint dockTile = new WorldPoint(2657, 2639, 0);
@@ -80,19 +77,23 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
                 initIsland();
             }
             processPortalDeaths();
+            if (currentPortal == null) {
+                status = "No viable portals";
+                return;
+            }
             if (ctx.pathing.distanceTo(currentPortal.walkTile) <= 10) {
                 if (!ctx.npcs.populate().filter(currentPortal.npcId).isEmpty()) {
                     if (ctx.players.getLocal().getInteracting() == null) {
                         SimpleNpc portal = ctx.npcs.nearest().next();
                         if (portal != null) {
-                            status = "Attacking portal";
+                            status = "Attacking portal: " + currentPortal.name();
                             portal.interact("Attack");
                             ctx.onCondition(() -> ctx.players.getLocal().getInteracting() != null, 250, 10);
                         }
                     }
                 }
             } else {
-                status = "Walking to portal";
+                status = "Walking to portal: " + currentPortal.name();
                 ctx.pathing.step(currentPortal.walkTile);
             }
         } else {
@@ -102,31 +103,36 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
 
     private void initIsland() {
         islandStarted = true;
-        deadPortals = new boolean[4];
         currentPortal = Portal.values()[between(0, 3)];
     }
 
     private void processPortalDeaths() {
-        for (int i = 0; i < 4; i++) {
-            Portal portal = Portal.values()[i];
-            if (ctx.pathing.distanceTo(portal.walkTile) <= 14) {
-                if (ctx.npcs.populate().filter(portal.npcId).isEmpty()) {
-                    deadPortals[i] = true;
-                } else if (ctx.npcs.nearest().next().isDead()) {
-                    deadPortals[i] = true;
-                }
-            }
-        }
-        if (deadPortals[currentPortal.ordinal()]) {
+        if (isPortalDead(currentPortal)) {
             int closest = -1;
             for (int i = 0; i < 4; i++) {
-                if (!deadPortals[i]) {
+                if (!isPortalDead(Portal.values()[i])) {
                     if (closest == -1 || ctx.pathing.distanceTo(Portal.values()[i].walkTile) < ctx.pathing.distanceTo(Portal.values()[closest].walkTile)) {
                         closest = i;
                     }
                 }
             }
-            currentPortal = Portal.values()[closest];
+            if (closest != -1) {
+                currentPortal = Portal.values()[closest];
+            } else {
+                currentPortal = null;
+            }
+        }
+    }
+
+    private boolean isPortalDead(final Portal portal) {
+        if (portal == null) {
+            return true;
+        }
+        try {
+            return ctx.client.getWidgetsArray()[portal.componentId].getText().contains("@red@");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return true;
         }
     }
 
@@ -152,7 +158,7 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
         g.drawLine(8, 24, 194, 24);
 
         g.setColor(Color.decode("#e0ad01"));
-        g.drawString("RPest Control                            v. " + "0.1", 12, 20);
+        g.drawString("RPest Control                            v. " + "0.2", 12, 20);
         g.drawString("Time: " + ctx.paint.formatTime(System.currentTimeMillis() - startTime), 14, 42);
         g.drawString("Status: " + status, 14, 56);
 
@@ -177,18 +183,18 @@ public class PestControl extends Script implements SimplePaintable, SimpleMessag
 
     public enum Portal {
 
-        BLUE(1742, new WorldPoint(2646, 2572, 0)),
-        YELLOW(1741, new WorldPoint(2670, 2573, 0)),
-        PINK(1740, new WorldPoint(2679, 2589, 0)),
         PURPLE(1739, new WorldPoint(2631, 2592, 0)),
-        ;
+        BLUE(1740, new WorldPoint(2679, 2589, 0)),
+        YELLOW(1741, new WorldPoint(2670, 2573, 0)),
+        PINK(1742, new WorldPoint(2646, 2572, 0));
 
-        public final int npcId;
+        public final int npcId, componentId;
         public final WorldPoint walkTile;
 
         Portal(final int npcId, final WorldPoint walkTile) {
             this.npcId = npcId;
             this.walkTile = walkTile;
+            this.componentId = 21111 + ordinal();
         }
 
     }
